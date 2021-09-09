@@ -17,7 +17,8 @@ def xywh_to_xyxy(bb):
     ymin = y
     xmax = x + h
     ymax = y + w
-    return tf.stack(xmin, ymin, xmax, ymax, axis=-1)
+    return tf.stack([xmin, ymin, xmax, ymax], axis=-1)
+
 
 def xyxy_to_xywh(bb):
     """
@@ -33,4 +34,7 @@ def xyxy_to_xywh(bb):
     xmin, ymin, xmax, ymax = tf.unstack(bb, axis=-1)
     h = xmax - xmin
     w = ymax - ymin
-    return tf.stack(xmin, ymin, w, h , axis=-1)
+    return tf.stack([xmin, ymin, w, h], axis=-1)
+
+# x = xyxy_to_xywh(tf.zeros((1, 1, 4)))
+# print(x)
