@@ -5,10 +5,10 @@ import math
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-from kerasutils.utils import xywh_to_xyxy
+from kerasutils.utils import xywh_to_xyxy, xyxy_to_xywh
 
 
-def box_iou(b1, b2):
+def box_iou_xywh(b1, b2):
     """
     Return iou tensor
 
@@ -48,7 +48,7 @@ def box_iou(b1, b2):
     return iou
 
 
-def box_giou(b_true, b_pred):
+def box_giou_xywh(b_true, b_pred):
     """
     Calculate GIoU loss on anchor boxes
     Reference Paper:
@@ -98,9 +98,7 @@ def box_giou(b_true, b_pred):
     return giou
 
 
-def box_diou_xyxy(b_true, b_pred, use_ciou=True):
-    b_true, b_pred = xywh_to_xyxy(b_true),xywh_to_xyxy(b_pred)
-    return box_diou_xywh(b_true, b_pred, use_ciou=use_ciou)
+
 
 
 
@@ -178,6 +176,20 @@ def box_diou_xywh(b_true, b_pred, use_ciou=True):
 
     diou = K.expand_dims(diou, -1)
     return diou
+
+
+def box_diou_xyxy(b_true, b_pred, use_ciou=True):
+    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
+    return box_diou_xywh(b_true, b_pred, use_ciou=use_ciou)
+
+
+def box_giou_xyxy(b_true, b_pred):
+    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
+    return box_giou_xywh(b_true, b_pred)
+
+def box_iou_xyxy(b_true, b_pred):
+    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
+    return box_iou_xywh(b_true, b_pred)
 
 
 def _smooth_labels(y_true, label_smoothing):
