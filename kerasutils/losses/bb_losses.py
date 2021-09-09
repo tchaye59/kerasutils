@@ -8,7 +8,7 @@ from tensorflow.keras import backend as K
 
 from kerasutils.utils import yolo_xyxy_to_xywh
 
-
+# https://github.com/david8862/keras-YOLOv3-model-set/edit/master/yolo2/loss.py
 def yolo_box_iou_xywh(b1, b2):
     """
     Return iou tensor
