@@ -8,6 +8,7 @@ from tensorflow.keras import backend as K
 
 from kerasutils.utils import yolo_xyxy_to_xywh
 
+
 # https://github.com/david8862/keras-YOLOv3-model-set/edit/master/yolo2/loss.py
 def yolo_box_iou_xywh(b1, b2):
     """
@@ -46,7 +47,7 @@ def yolo_box_iou_xywh(b1, b2):
     b2_area = b2_wh[..., 0] * b2_wh[..., 1]
     iou = intersect_area / (b1_area + b2_area - intersect_area)
 
-    return 1-iou
+    return tf.expand_dims(1 - iou, axis=-1)
 
 
 def yolo_box_giou_xywh(b_true, b_pred):
@@ -96,7 +97,7 @@ def yolo_box_giou_xywh(b_true, b_pred):
     giou = iou - 1.0 * (enclose_area - union_area) / (enclose_area + K.epsilon())
     giou = K.expand_dims(giou, -1)
 
-    return 1-giou
+    return tf.expand_dims(1 - giou, axis=-1)
 
 
 def yolo_box_diou_xywh(b_true, b_pred, use_ciou=True):
@@ -174,7 +175,7 @@ def yolo_box_diou_xywh(b_true, b_pred, use_ciou=True):
         diou = diou - alpha * v
 
     diou = K.expand_dims(diou, -1)
-    return 1-diou
+    return tf.expand_dims(1 - diou, axis=-1)
 
 
 def yolo_box_diou_xyxy(b_true, b_pred, use_ciou=True):
