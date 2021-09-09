@@ -4,7 +4,8 @@
 import math
 import tensorflow as tf
 from tensorflow.keras import backend as K
-from kerasutils.utils.utils import xywh_to_xyxy
+
+from kerasutils.utils import xywh_to_xyxy
 
 
 def box_iou(b1, b2):
