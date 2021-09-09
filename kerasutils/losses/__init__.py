@@ -1,1 +1,1 @@
-from bb_losses import  *
+from kerasutils.losses.bb_losses import *
