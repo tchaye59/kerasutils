@@ -1,15 +1,25 @@
 from setuptools import setup
 import setuptools
 
+
+long_description = ""
+LICENSE = ""
 with open("README.md", "r", encoding="utf-8") as f:
-    long_description = f.read()
+    try:
+        long_description = f.read()
+    except Exception as e:
+        print(e)
 
 with open("LICENSE", "r", encoding="utf-8") as f:
-    LICENSE = f.read()
+    try:
+        LICENSE = f.read()
+    except Exception as e:
+        print(e)
+
 
 setup(
     name='kerasutils',
-    version='0.0.0',
+    version='0.0.1',
     packages=setuptools.find_packages(),
     url='https://github.com/tchaye59/kerasutils',
     license=LICENSE,
