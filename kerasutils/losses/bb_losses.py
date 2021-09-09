@@ -1,14 +1,15 @@
 # -*- coding=utf-8 -*-
-#!/usr/bin/python3
+# !/usr/bin/python3
 
 import math
+
 import tensorflow as tf
 from tensorflow.keras import backend as K
 
-from kerasutils.utils import xywh_to_xyxy, xyxy_to_xywh
+from kerasutils.utils import yolo_xyxy_to_xywh
 
 
-def box_iou_xywh(b1, b2):
+def yolo_box_iou_xywh(b1, b2):
     """
     Return iou tensor
 
@@ -22,10 +23,10 @@ def box_iou_xywh(b1, b2):
     iou: tensor, shape=(i1,...,iN, j)
     """
     # Expand dim to apply broadcasting.
-    #b1 = K.expand_dims(b1, -2)
+    # b1 = K.expand_dims(b1, -2)
     b1_xy = b1[..., :2]
     b1_wh = b1[..., 2:4]
-    b1_wh_half = b1_wh/2.
+    b1_wh_half = b1_wh / 2.
     b1_mins = b1_xy - b1_wh_half
     b1_maxes = b1_xy + b1_wh_half
 
@@ -33,7 +34,7 @@ def box_iou_xywh(b1, b2):
     b2 = K.expand_dims(b2, 0)
     b2_xy = b2[..., :2]
     b2_wh = b2[..., 2:4]
-    b2_wh_half = b2_wh/2.
+    b2_wh_half = b2_wh / 2.
     b2_mins = b2_xy - b2_wh_half
     b2_maxes = b2_xy + b2_wh_half
 
@@ -48,7 +49,7 @@ def box_iou_xywh(b1, b2):
     return iou
 
 
-def box_giou_xywh(b_true, b_pred):
+def yolo_box_giou_xywh(b_true, b_pred):
     """
     Calculate GIoU loss on anchor boxes
     Reference Paper:
@@ -66,13 +67,13 @@ def box_giou_xywh(b_true, b_pred):
     """
     b_true_xy = b_true[..., :2]
     b_true_wh = b_true[..., 2:4]
-    b_true_wh_half = b_true_wh/2.
+    b_true_wh_half = b_true_wh / 2.
     b_true_mins = b_true_xy - b_true_wh_half
     b_true_maxes = b_true_xy + b_true_wh_half
 
     b_pred_xy = b_pred[..., :2]
     b_pred_wh = b_pred[..., 2:4]
-    b_pred_wh_half = b_pred_wh/2.
+    b_pred_wh_half = b_pred_wh / 2.
     b_pred_mins = b_pred_xy - b_pred_wh_half
     b_pred_maxes = b_pred_xy + b_pred_wh_half
 
@@ -98,11 +99,7 @@ def box_giou_xywh(b_true, b_pred):
     return giou
 
 
-
-
-
-
-def box_diou_xywh(b_true, b_pred, use_ciou=True):
+def yolo_box_diou_xywh(b_true, b_pred, use_ciou=True):
     """
     Calculate DIoU/CIoU loss on anchor boxes
     Reference Paper:
@@ -121,13 +118,13 @@ def box_diou_xywh(b_true, b_pred, use_ciou=True):
     """
     b_true_xy = b_true[..., :2]
     b_true_wh = b_true[..., 2:4]
-    b_true_wh_half = b_true_wh/2.
+    b_true_wh_half = b_true_wh / 2.
     b_true_mins = b_true_xy - b_true_wh_half
     b_true_maxes = b_true_xy + b_true_wh_half
 
     b_pred_xy = b_pred[..., :2]
     b_pred_wh = b_pred[..., 2:4]
-    b_pred_wh_half = b_pred_wh/2.
+    b_pred_wh_half = b_pred_wh / 2.
     b_pred_mins = b_pred_xy - b_pred_wh_half
     b_pred_maxes = b_pred_xy + b_pred_wh_half
 
@@ -154,7 +151,9 @@ def box_diou_xywh(b_true, b_pred, use_ciou=True):
 
     if use_ciou:
         # calculate param v and alpha to extend to CIoU
-        v = 4*K.square(tf.math.atan2(b_true_wh[..., 0], b_true_wh[..., 1]) - tf.math.atan2(b_pred_wh[..., 0], b_pred_wh[..., 1])) / (math.pi * math.pi)
+        v = 4 * K.square(tf.math.atan2(b_true_wh[..., 0], b_true_wh[..., 1]) - tf.math.atan2(b_pred_wh[..., 0],
+                                                                                             b_pred_wh[..., 1])) / (
+                    math.pi * math.pi)
 
         # a trick: here we add an non-gradient coefficient w^2+h^2 to v to customize it's back-propagate,
         #          to match related description for equation (12) in original paper
@@ -172,26 +171,31 @@ def box_diou_xywh(b_true, b_pred, use_ciou=True):
         v = v * tf.stop_gradient(b_pred_wh[..., 0] * b_pred_wh[..., 0] + b_pred_wh[..., 1] * b_pred_wh[..., 1])
 
         alpha = v / (1.0 - iou + v)
-        diou = diou - alpha*v
+        diou = diou - alpha * v
 
     diou = K.expand_dims(diou, -1)
     return diou
 
 
-def box_diou_xyxy(b_true, b_pred, use_ciou=True):
-    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
-    return box_diou_xywh(b_true, b_pred, use_ciou=use_ciou)
+def yolo_box_diou_xyxy(b_true, b_pred, use_ciou=True):
+    b_true, b_pred = yolo_xyxy_to_xywh(b_true), yolo_xyxy_to_xywh(b_pred)
+    return yolo_box_diou_xywh(b_true, b_pred, use_ciou=use_ciou)
 
 
-def box_giou_xyxy(b_true, b_pred):
-    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
-    return box_giou_xywh(b_true, b_pred)
+def yolo_box_giou_xyxy(b_true, b_pred):
+    b_true, b_pred = yolo_xyxy_to_xywh(b_true), yolo_xyxy_to_xywh(b_pred)
+    return yolo_box_giou_xywh(b_true, b_pred)
 
-def box_iou_xyxy(b_true, b_pred):
-    b_true, b_pred = xyxy_to_xywh(b_true),xyxy_to_xywh(b_pred)
-    return box_iou_xywh(b_true, b_pred)
+
+def yolo_box_iou_xyxy(b_true, b_pred):
+    b_true, b_pred = yolo_xyxy_to_xywh(b_true), yolo_xyxy_to_xywh(b_pred)
+    return yolo_box_iou_xywh(b_true, b_pred)
 
 
 def _smooth_labels(y_true, label_smoothing):
     label_smoothing = K.constant(label_smoothing, dtype=K.floatx())
     return y_true * (1.0 - label_smoothing) + 0.5 * label_smoothing
+
+# x = tf.zeros((1, 1, 4))
+# x = yolo_box_diou_xyxy(x, x)
+# print(x)
